@@ -1,12 +1,14 @@
-from typing import Any
+from typing import Any, List, Type, Tuple
 
 from .handler import Handler
+from .middleware import Middleware
 
 
 class Router:
     _application: Any
     url_prefix: str
-    routes: dict = {}
+    handlers: List[Type[Handler]] = []
+    middleware: List[Tuple[Middleware, dict]] = []
 
     def __init__(self, url_prefix: str):
         self.url_prefix = url_prefix
@@ -19,5 +21,9 @@ class Router:
     def application(self, value):
         self._application = value
 
-    def handle(self, route: str, handler: Handler):
-        pass
+    def add_middleware(self, middleware: Type[Middleware], **params):
+        self.middleware.append((middleware, params))
+
+    def connect_handler(self, handler: Type[Handler]):
+        handler.router = self
+        self.handlers.append(handler)

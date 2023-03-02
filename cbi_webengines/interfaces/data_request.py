@@ -5,10 +5,11 @@ from pydantic import BaseModel
 from .header import Header
 
 
-class Request(BaseModel):
+class DataRequest(BaseModel):
+    data: BaseModel | None = None
     headers: List[Header] = []
 
-    def header(self, name: str) -> str | None:
+    def get_header(self, name: str) -> str | None:
         for hd in self.headers:
             if hd.name == name:
                 return hd.value
