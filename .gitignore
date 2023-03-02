@@ -1,6 +1,7 @@
 __pycache__
 .pytest*
-.coverage
+.coverage*
+!.coveragerc
 .pypirc
 dist
 *.egg-info
