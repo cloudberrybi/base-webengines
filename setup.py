@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 setup(
     name='cbi_webengines',
     zip_safe=True,
-    version='1.1.0',
+    version='1.1.1',
     description='Base CBI objects for popular web engines (FastAPI, etc)',
     url='https://github.com/cloudberrybi/base-webengines',
     maintainer='CloudberryBI',
