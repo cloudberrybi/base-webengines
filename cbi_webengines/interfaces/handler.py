@@ -26,6 +26,7 @@ class Handler:
 
         middleware_stack = list(cls.router.application.middleware + cls.router.middleware)
         middleware_stack.reverse()
+
         last_middleware = None
         for i, middleware_tuple in enumerate(middleware_stack):
             middleware_cls, middleware_params = middleware_tuple

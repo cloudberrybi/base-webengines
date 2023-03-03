@@ -26,16 +26,66 @@ def test_fastapi_route(test_client):
                 'tested_RouterMiddleware1',
                 'tested_RouterMiddleware2'
             ],
-                'response_tests': [
-                    'handle_RouteHandler',
-                    'tested_RouterMiddleware2',
-                    'tested_RouterMiddleware1',
-                    'tested_AppMiddleware3',
-                    'tested_AppMiddleware2',
-                    'tested_AppMiddleware1'
+            'response_tests': [
+                'handle_RouteHandler',
+                'tested_RouterMiddleware2',
+                'tested_RouterMiddleware1',
+                'tested_AppMiddleware3',
+                'tested_AppMiddleware2',
+                'tested_AppMiddleware1'
+            ],
+            'headers': [],
+        },
+        'error': None
+    }
+
+def test_extract_headers_route(test_client):
+    response = test_client.get(
+        '/test_router/extract_headers',
+        headers={
+            'Test-Header-1': 'test1',
+            'test-header-2': 'test2'
+        }
+    )
+    response_data = response.json()
+
+    assert response.status_code == 200
+    assert response_data == {
+        'status_code': 200,
+        'success': True,
+        'result': {
+            'request_tests': [],
+            'response_tests': [
+                'tested_RouterMiddleware2',
+                'tested_RouterMiddleware1',
+                'tested_AppMiddleware3',
+                'tested_AppMiddleware2',
+                'tested_AppMiddleware1'
+            ],
+            'headers': [
+                {'name': 'HOST', 'value': 'testserver'},
+                {'name': 'ACCEPT', 'value': '*/*'},
+                {'name': 'ACCEPT-ENCODING', 'value': 'gzip, deflate'},
+                {'name': 'CONNECTION', 'value': 'keep-alive'},
+                {'name': 'USER-AGENT', 'value': 'testclient'},
+                {'name': 'TEST-HEADER-1', 'value': 'test1'},
+                {'name': 'TEST-HEADER-2', 'value': 'test2'},
+                {'name': 'TEST-HEADER-3', 'value': 'test3'}
             ]
         },
         'error': None
+    }
+
+def test_raise_unknown_exception(test_client):
+    response = test_client.get('/test_router/raise_exception')
+    response_data = response.json()
+
+    assert response.status_code == 400
+    assert response_data == {
+        'status_code': 400,
+        'success': False,
+        'result': None,
+        'error': 'Test exception'
     }
 
 def test_fastapi_unfound_route(test_client):

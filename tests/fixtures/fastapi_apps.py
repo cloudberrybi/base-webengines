@@ -11,6 +11,7 @@ from cbi_webengines.interfaces import (
     servers,
     Router,
     Handler,
+    Header,
     Middleware,
     DataRequest,
     DataResponse,
@@ -28,13 +29,13 @@ class AppHandlerRequestData(BaseModel):
 class AppHandlerResponseData(BaseModel):
     request_tests: List[str]
     response_tests: List[str]
+    headers: List[Header]
 
 
 class AppMiddleware1(Middleware):
     async def process_request(self, request: DataRequest) -> DataRequest:
         if not request.data:
             request.data = AppHandlerRequestData()
-
         request.data.tests.append('tested_AppMiddleware1')
         return request
     
@@ -81,6 +82,14 @@ class RouterMiddleware2(Middleware):
     async def process_response(self, response: DataResponse) -> DataResponse:
         response.result.response_tests.append('tested_RouterMiddleware2')
         return await super().process_response(response)
+    
+
+class AddHeaderMiddleware(Middleware):
+    async def process_request(self, request: DataRequest) -> DataRequest:
+        request.headers.append(Header(
+            name='TEST-HEADER-3', value='test3',
+        ))
+        return request
 
 
 class RouteHandler(Handler):
@@ -88,14 +97,38 @@ class RouteHandler(Handler):
     request_data = AppHandlerRequestData
     
     async def do(self, request: DataRequest) -> DataResponse:
+        print(request.data)
         return DataResponse(
             result=AppHandlerResponseData(
                 request_tests=request.data.tests,
                 response_tests=[
                     'handle_RouteHandler',
-                ]
+                ],
+                headers=[],
             ),
         )
+    
+
+class ExtractHeadersHandler(Handler):
+    url_prefix = '/extract_headers'
+    method = 'GET'
+
+    async def do(self, request: DataRequest) -> DataResponse:
+        return DataResponse(
+            result=AppHandlerResponseData(
+                request_tests=[],
+                response_tests=[],
+                headers=request.headers,
+            ),
+        )
+
+
+class RaiseExceptionHandler(Handler):
+    url_prefix = '/raise_exception'
+    method = 'GET'
+
+    async def do(self, request: DataRequest) -> DataResponse:
+        raise Exception('Test exception')
 
 
 @pytest.fixture()
@@ -121,7 +154,11 @@ def fastapi_app():
     test_router = Router('/test_router')
     test_router.add_middleware(RouterMiddleware1)
     test_router.add_middleware(RouterMiddleware2)
+    test_router.add_middleware(AddHeaderMiddleware)
+
     test_router.connect_handler(RouteHandler)
+    test_router.connect_handler(ExtractHeadersHandler)
+    test_router.connect_handler(RaiseExceptionHandler)
 
     app.connect_router(test_router)
 

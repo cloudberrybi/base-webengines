@@ -28,7 +28,9 @@ class Application:
         self.routers.append(router)
 
     def add_middleware(self, middleware: Type[Middleware], **params):
-        self.middleware.append((middleware, params))
+        middleware_item = (middleware, params)
+        if middleware_item not in self.middleware:
+            self.middleware.append(middleware_item)
 
     async def async_serve(self):
         await self.server.async_serve(app=self.get_engine_app())

@@ -22,7 +22,9 @@ class Router:
         self._application = value
 
     def add_middleware(self, middleware: Type[Middleware], **params):
-        self.middleware.append((middleware, params))
+        middleware_item = (middleware, params)
+        if middleware_item not in self.middleware:
+            self.middleware.append(middleware_item)
 
     def connect_handler(self, handler: Type[Handler]):
         handler.router = self
