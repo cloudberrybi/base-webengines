@@ -13,11 +13,11 @@ class Handler:
     request_data: Type[BaseModel] | None = None
 
     @property
-    def router(self):
+    def router(self): # ignore_coverage
         return self._router
     
     @router.setter
-    def router(self, value):
+    def router(self, value): # ignore_coverage
         self._router = value
 
     @classmethod
@@ -44,5 +44,5 @@ class Handler:
         return await handler.do(request)
 
 
-    async def do(self, request: DataRequest) -> DataResponse:
+    async def do(self, request: DataRequest) -> DataResponse: # ignore_coverage
         raise NotImplementedError()

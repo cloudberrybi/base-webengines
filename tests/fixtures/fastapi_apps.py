@@ -92,6 +92,10 @@ class AddHeaderMiddleware(Middleware):
         return request
 
 
+class EmptyMiddleware(Middleware):
+    pass
+
+
 class RouteHandler(Handler):
     url_prefix = '/test_route'
     request_data = AppHandlerRequestData
@@ -107,7 +111,24 @@ class RouteHandler(Handler):
                 headers=[],
             ),
         )
+
+
+class WithoutMiddlewaresHandler(Handler):
+    url_prefix = '/test_route'
+    request_data = AppHandlerRequestData
     
+    async def do(self, request: DataRequest) -> DataResponse:
+        print(request.data)
+        return DataResponse(
+            result=AppHandlerResponseData(
+                request_tests=request.data.tests,
+                response_tests=[
+                    'handle_WithoutMiddlewaresHandler',
+                ],
+                headers=[],
+            ),
+        )
+
 
 class ExtractHeadersHandler(Handler):
     url_prefix = '/extract_headers'
@@ -119,6 +140,31 @@ class ExtractHeadersHandler(Handler):
                 request_tests=[],
                 response_tests=[],
                 headers=request.headers,
+            ),
+        )
+    
+
+class GetHeadersHandler(Handler):
+    url_prefix = '/get_header'
+    method = 'GET'
+
+    async def do(self, request: DataRequest) -> DataResponse:
+        headers = []
+        header_names = [
+            'TEST-HEADER-6',
+            'TEST-HEADER-7',
+        ]
+
+        for header_name in header_names:
+            header = request.get_header(header_name)
+
+            if header:
+                headers.append(header)
+        return DataResponse(
+            result=AppHandlerResponseData(
+                request_tests=[],
+                response_tests=[],
+                headers=headers,
             ),
         )
 
@@ -147,6 +193,7 @@ def fastapi_app():
         engine=engines.FastAPIEngineRepository,
     )
 
+    app.add_middleware(EmptyMiddleware)
     app.add_middleware(AppMiddleware1)
     app.add_middleware(AppMiddleware2)
     app.add_middleware(AppMiddleware3)
@@ -159,6 +206,23 @@ def fastapi_app():
     test_router.connect_handler(RouteHandler)
     test_router.connect_handler(ExtractHeadersHandler)
     test_router.connect_handler(RaiseExceptionHandler)
+    test_router.connect_handler(GetHeadersHandler)
+
+    app.connect_router(test_router)
+
+    return app
+
+@pytest.fixture()
+def fastapi_app_without_middlewares():
+    app = ApplicationRepository.create_application(
+        url_prefix='/clean_app',
+        server=servers.UvicornServer,
+        engine=engines.FastAPIEngineRepository,
+    )
+
+    test_router = Router('/test_router_1')
+
+    test_router.connect_handler(WithoutMiddlewaresHandler)
 
     app.connect_router(test_router)
 
@@ -171,6 +235,10 @@ def simple_test_client(simple_fastapi_app):
 @pytest.fixture()
 def test_client(fastapi_app):
     return TestClient(fastapi_app.get_engine_app())
+
+@pytest.fixture()
+def test_client_without_middlewares(fastapi_app_without_middlewares):
+    return TestClient(fastapi_app_without_middlewares.get_engine_app())
 
 def run_server(app):
     from cbi_ddd.repositories import SettingsRepository

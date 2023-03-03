@@ -14,7 +14,7 @@ class Application:
     engine_repository: Type[EngineRepository]
     server: Type[Server]
     url_prefix: str
-    middleware: List[Tuple[Middleware, dict]] = []
+    middleware: List[Tuple[Middleware, dict]]
     routers: List[Router] = []
 
     def __init__(self, engine_repository: Type[EngineRepository], server: Type[Server], url_prefix: str):
@@ -22,6 +22,7 @@ class Application:
 
         self.server = server
         self.url_prefix = url_prefix
+        self.middleware = []
 
     def connect_router(self, router: Router):
         router.application = self
@@ -32,10 +33,10 @@ class Application:
         if middleware_item not in self.middleware:
             self.middleware.append(middleware_item)
 
-    async def async_serve(self):
+    async def async_serve(self): # ignore_coverage
         await self.server.async_serve(app=self.get_engine_app())
 
-    def serve(self):
+    def serve(self): # ignore_coverage
         asyncio.run(self.async_serve())
 
     def get_engine_app(self) -> Any:
