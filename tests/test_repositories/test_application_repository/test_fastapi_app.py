@@ -39,6 +39,24 @@ def test_fastapi_route(test_client):
         'error': None
     }
 
+def test_fastapi_route_without_middleware(test_client_without_middlewares):
+    response = test_client_without_middlewares.post('/clean_app/test_router_1/test_route')
+    response_data = response.json()
+
+    assert response.status_code == 200
+    assert response_data == {
+        'status_code': 200,
+        'success': True,
+        'result': {
+            'request_tests': [],
+            'response_tests': [
+                'handle_WithoutMiddlewaresHandler'
+            ],
+            'headers': []
+        },
+        'error': None
+    }
+
 def test_extract_headers_route(test_client):
     response = test_client.get(
         '/test_router/extract_headers',
@@ -71,6 +89,35 @@ def test_extract_headers_route(test_client):
                 {'name': 'TEST-HEADER-1', 'value': 'test1'},
                 {'name': 'TEST-HEADER-2', 'value': 'test2'},
                 {'name': 'TEST-HEADER-3', 'value': 'test3'}
+            ]
+        },
+        'error': None
+    }
+
+def test_get_header(test_client):
+    response = test_client.get(
+        '/test_router/get_header',
+        headers={
+            'Test-Header-6': 'test-6'
+        }
+    )
+    response_data = response.json()
+
+    assert response.status_code == 200
+    assert response_data == {
+        'status_code': 200,
+        'success': True,
+        'result': {
+            'request_tests': [],
+            'response_tests': [
+                'tested_RouterMiddleware2',
+                'tested_RouterMiddleware1',
+                'tested_AppMiddleware3',
+                'tested_AppMiddleware2',
+                'tested_AppMiddleware1'
+            ],
+            'headers': [
+                {'name': 'TEST-HEADER-6', 'value': 'test-6'},
             ]
         },
         'error': None

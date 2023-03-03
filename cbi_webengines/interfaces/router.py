@@ -7,11 +7,13 @@ from .middleware import Middleware
 class Router:
     _application: Any
     url_prefix: str
-    handlers: List[Type[Handler]] = []
-    middleware: List[Tuple[Middleware, dict]] = []
+    handlers: List[Type[Handler]]
+    middleware: List[Tuple[Middleware, dict]]
 
     def __init__(self, url_prefix: str):
         self.url_prefix = url_prefix
+        self.handlers = []
+        self.middleware = []
 
     @property
     def application(self):
